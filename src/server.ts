@@ -8,6 +8,18 @@ import { formatDate } from "./utils.js";
 const app = express();
 app.use(express.json());
 
+// CORS: cc-mcp-test02 のフロントエンドからのアクセスを許可
+app.use((_req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  if (_req.method === "OPTIONS") {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
+
 const repository = new TodoRepository();
 const service = new TodoService();
 

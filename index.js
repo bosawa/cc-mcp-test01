@@ -46,6 +46,19 @@ function listTodos() {
   console.log(`合計: ${todos.length} 件`);
 }
 
+// TODO を削除
+function deleteTodo(id) {
+  const todos = loadTodos();
+  const index = todos.findIndex((todo) => todo.id === Number(id));
+  if (index === -1) {
+    console.log(`⚠️  ID: ${id} の TODO は見つかりません。`);
+    process.exit(1);
+  }
+  const removed = todos.splice(index, 1)[0];
+  saveTodos(todos);
+  console.log(`🗑️  TODO を削除しました: "${removed.text}" (ID: ${removed.id})`);
+}
+
 // メイン処理: コマンドライン引数を解析して実行
 const command = process.argv[2];
 const argument = process.argv[3];
@@ -61,11 +74,19 @@ switch (command) {
   case "list":
     listTodos();
     break;
+  case "delete":
+    if (!argument) {
+      console.log("⚠️  使い方: node index.js delete <ID>");
+      process.exit(1);
+    }
+    deleteTodo(argument);
+    break;
   default:
     console.log("📝 TODO 管理ツール");
     console.log("");
     console.log("使い方:");
     console.log('  node index.js add "TODOの内容"  - TODO を追加');
     console.log("  node index.js list              - TODO 一覧を表示");
+    console.log("  node index.js delete <ID>       - TODO を削除");
     break;
 }

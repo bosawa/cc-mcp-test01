@@ -1,6 +1,9 @@
 # 依存パッケージ
 node_modules/
 
+# ビルド出力
+dist/
+
 # アプリが生成するデータファイル
 todos.json
 

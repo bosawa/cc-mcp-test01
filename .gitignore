@@ -1,0 +1,12 @@
+# 依存パッケージ
+node_modules/
+
+# アプリが生成するデータファイル
+todos.json
+
+# 環境変数ファイル
+.env
+
+# OS が生成するファイル
+Thumbs.db
+.DS_Store

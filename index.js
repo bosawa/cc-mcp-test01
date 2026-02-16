@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { formatDate, getStats } = require("./utils");
 
 const DATA_FILE = path.join(__dirname, "todos.json");
 
@@ -40,7 +41,7 @@ function listTodos() {
   console.log("📋 TODO 一覧:");
   console.log("-".repeat(40));
   todos.forEach((todo) => {
-    console.log(`  [${todo.id}] ${todo.text}`);
+    console.log(`  [${todo.id}] ${todo.text}  (${formatDate(todo.createdAt)})`);
   });
   console.log("-".repeat(40));
   console.log(`合計: ${todos.length} 件`);
@@ -81,6 +82,16 @@ switch (command) {
     }
     deleteTodo(argument);
     break;
+  case "stats": {
+    const todos = loadTodos();
+    const stats = getStats(todos);
+    console.log("📊 TODO 統計:");
+    console.log(`  合計: ${stats.count} 件`);
+    if (stats.latest) {
+      console.log(`  最新: "${stats.latest.text}" (${formatDate(stats.latest.createdAt)})`);
+    }
+    break;
+  }
   default:
     console.log("📝 TODO 管理ツール");
     console.log("");
@@ -88,5 +99,6 @@ switch (command) {
     console.log('  node index.js add "TODOの内容"  - TODO を追加');
     console.log("  node index.js list              - TODO 一覧を表示");
     console.log("  node index.js delete <ID>       - TODO を削除");
+    console.log("  node index.js stats             - 統計情報を表示");
     break;
 }

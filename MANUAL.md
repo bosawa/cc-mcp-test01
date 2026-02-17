@@ -2,8 +2,13 @@
 
 ## 1. 概要
 
-コマンドラインで動作するシンプルな TODO 管理ツールです。
-TODO の追加・一覧表示・削除・統計表示ができます。
+TODO の追加・一覧表示・削除・統計表示を提供するツールです。
+2 つのインターフェースを備えています。
+
+| # | インターフェース | 説明 |
+|---|-----------------|------|
+| 1 | CLI（コマンドライン） | `npx tsx src/index.ts` で直接操作 |
+| 2 | REST API サーバー | Express + Swagger UI による HTTP API |
 
 ---
 
@@ -25,261 +30,339 @@ git clone https://github.com/bosawa/cc-mcp-test01.git
 cd cc-mcp-test01
 ```
 
-### 3.2 依存パッケージ
+### 3.2 依存パッケージのインストール
 
-外部パッケージは不要です。Node.js の標準モジュール（`fs`, `path`）のみ使用しています。
+```bash
+npm install
+```
 
 ---
 
-## 4. コマンド一覧
+## 4. CLI コマンド一覧
 
 | # | コマンド | 機能 | 引数 |
 |---|---------|------|------|
-| 1 | `node index.js add "内容"` | TODO を追加 | 必須: TODO の内容（文字列） |
-| 2 | `node index.js list` | TODO 一覧を表示 | なし |
-| 3 | `node index.js delete <ID>` | TODO を削除 | 必須: TODO の ID（数値） |
-| 4 | `node index.js stats` | 統計情報を表示 | なし |
-| 5 | `node index.js` | ヘルプを表示 | なし |
+| 1 | `npm run cli add "内容"` | TODO を追加 | 必須: TODO の内容（文字列） |
+| 2 | `npm run cli list` | TODO 一覧を表示 | なし |
+| 3 | `npm run cli delete <ID>` | TODO を削除 | 必須: TODO の ID（数値） |
+| 4 | `npm run cli stats` | 統計情報を表示 | なし |
+| 5 | `npm run cli` | ヘルプを表示 | なし |
 
----
+### 4.1 実行例
 
-## 5. コマンド詳細
-
-### 5.1 add — TODO を追加
-
-**書式**:
 ```bash
-node index.js add "TODOの内容"
-```
-
-**動作**:
-- 新しい TODO を作成し、`todos.json` に保存します
-- ID は自動採番されます（現在の件数 + 1）
-- 作成日時（`createdAt`）が自動記録されます
-
-**実行例**:
-```bash
-$ node index.js add "買い物に行く"
+$ npm run cli add "買い物に行く"
 ✅ TODO を追加しました: "買い物に行く" (ID: 1)
 
-$ node index.js add "レポートを書く"
-✅ TODO を追加しました: "レポートを書く" (ID: 2)
-```
-
-**エラー時**:
-```bash
-$ node index.js add
-⚠️  使い方: node index.js add "TODOの内容"
-```
-内容を指定せずに実行すると、使い方を表示して終了します（終了コード: 1）。
-
----
-
-### 5.2 list — TODO 一覧を表示
-
-**書式**:
-```bash
-node index.js list
-```
-
-**動作**:
-- 保存されているすべての TODO を一覧表示します
-- 各 TODO の ID・内容・作成日時が表示されます
-- 合計件数も表示されます
-
-**実行例**:
-```bash
-$ node index.js list
+$ npm run cli list
 📋 TODO 一覧:
 ----------------------------------------
   [1] 買い物に行く  (2026/02/16 17:30)
-  [2] レポートを書く  (2026/02/16 17:31)
 ----------------------------------------
-合計: 2 件
-```
+合計: 1 件
 
-**TODO が 0 件の場合**:
-```bash
-$ node index.js list
-📋 TODO はまだありません。
-```
+$ npm run cli stats
+📊 TODO 統計:
+  合計: 1 件
+  最新: "買い物に行く" (2026/02/16 17:30)
 
----
-
-### 5.3 delete — TODO を削除
-
-**書式**:
-```bash
-node index.js delete <ID>
-```
-
-**動作**:
-- 指定した ID の TODO を `todos.json` から削除します
-- 削除された TODO の内容が表示されます
-
-**実行例**:
-```bash
-$ node index.js delete 1
+$ npm run cli delete 1
 🗑️  TODO を削除しました: "買い物に行く" (ID: 1)
 ```
 
-**エラー時（ID 未指定）**:
+---
+
+## 5. REST API サーバー
+
+### 5.1 サーバーの起動
+
 ```bash
-$ node index.js delete
-⚠️  使い方: node index.js delete <ID>
+npm run dev
 ```
 
-**エラー時（存在しない ID）**:
+起動後のエンドポイント:
+
+| # | URL | 説明 |
+|---|-----|------|
+| 1 | http://localhost:3000 | API ルート |
+| 2 | http://localhost:3000/docs | Swagger UI（インタラクティブな API ドキュメント） |
+| 3 | http://localhost:3000/swagger.json | OpenAPI 3.0 仕様 JSON |
+
+### 5.2 API エンドポイント一覧
+
+| # | メソッド | パス | 説明 | リクエストボディ | レスポンス |
+|---|---------|------|------|-----------------|-----------|
+| 1 | GET | `/api/todos` | TODO 一覧を取得 | なし | `Todo[]` |
+| 2 | POST | `/api/todos` | TODO を追加 | `{ text: string }` | `Todo`（201） |
+| 3 | DELETE | `/api/todos/:id` | TODO を削除 | なし | `Todo`（200） |
+| 4 | GET | `/api/stats` | 統計情報を取得 | なし | `TodoStats` |
+
+### 5.3 API リクエスト・レスポンス例
+
+#### GET /api/todos — TODO 一覧を取得
+
 ```bash
-$ node index.js delete 99
-⚠️  ID: 99 の TODO は見つかりません。
+$ curl http://localhost:3000/api/todos
 ```
+
+```json
+[
+  {
+    "id": 1,
+    "text": "買い物に行く",
+    "createdAt": "2026-02-16T08:30:00.000Z",
+    "createdAtFormatted": "2026/02/16 17:30"
+  }
+]
+```
+
+#### POST /api/todos — TODO を追加
+
+```bash
+$ curl -X POST http://localhost:3000/api/todos \
+  -H "Content-Type: application/json" \
+  -d '{"text": "レポートを書く"}'
+```
+
+```json
+{
+  "id": 2,
+  "text": "レポートを書く",
+  "createdAt": "2026-02-16T08:31:00.000Z",
+  "createdAtFormatted": "2026/02/16 17:31"
+}
+```
+
+エラー時（text 未指定）:
+
+```json
+{ "error": "text は必須です" }
+```
+
+#### DELETE /api/todos/:id — TODO を削除
+
+```bash
+$ curl -X DELETE http://localhost:3000/api/todos/1
+```
+
+```json
+{
+  "id": 1,
+  "text": "買い物に行く",
+  "createdAt": "2026-02-16T08:30:00.000Z"
+}
+```
+
+エラー時（存在しない ID）:
+
+```json
+{ "error": "ID: 99 の TODO は見つかりません" }
+```
+
+#### GET /api/stats — 統計情報を取得
+
+```bash
+$ curl http://localhost:3000/api/stats
+```
+
+```json
+{
+  "count": 2,
+  "latest": {
+    "id": 2,
+    "text": "レポートを書く",
+    "createdAt": "2026-02-16T08:31:00.000Z",
+    "createdAtFormatted": "2026/02/16 17:31"
+  }
+}
+```
+
+### 5.4 CORS 設定
+
+API サーバーは全オリジンからのアクセスを許可しています（`Access-Control-Allow-Origin: *`）。
+cc-mcp-test02 などの別オリジンのフロントエンドから利用できます。
+
+### 5.5 OpenAPI スキーマ定義
+
+API 仕様は `src/server.ts` 内の `@openapi` JSDoc アノテーションで定義されています。
+`swagger-jsdoc` がこのアノテーションから OpenAPI 3.0 仕様を自動生成し、以下で公開しています:
+
+- Swagger UI: http://localhost:3000/docs
+- JSON: http://localhost:3000/swagger.json
+
+外部プロジェクトはこの JSON を取得し、`openapi-typescript-codegen` 等で型付き API クライアントを自動生成できます。
 
 ---
 
-### 5.4 stats — 統計情報を表示
+## 6. 型定義
 
-**書式**:
-```bash
-node index.js stats
+### 6.1 Todo
+
+```typescript
+interface Todo {
+  id: number;        // TODO の識別番号（自動採番）
+  text: string;      // TODO の内容
+  createdAt: string;  // 作成日時（ISO 8601 形式）
+}
 ```
 
-**動作**:
-- TODO の合計件数を表示します
-- 最も新しく追加された TODO の内容と日時を表示します
+### 6.2 TodoStats
 
-**実行例**:
-```bash
-$ node index.js stats
-📊 TODO 統計:
-  合計: 2 件
-  最新: "レポートを書く" (2026/02/16 17:31)
+```typescript
+interface TodoStats {
+  count: number;       // TODO の合計件数
+  latest: Todo | null;  // 最も新しい TODO（0 件の場合は null）
+}
 ```
+
+### 6.3 API レスポンスの拡張フィールド
+
+REST API のレスポンスでは、上記に加えて `createdAtFormatted`（表示用の日時文字列、例: `2026/02/16 17:30`）が付与されます。
 
 ---
 
-### 5.5 ヘルプ表示
+## 7. データファイル
 
-**書式**:
-```bash
-node index.js
-```
-
-**動作**:
-- 引数なし、または不明なコマンドを指定した場合、使い方を表示します
-
-**実行例**:
-```bash
-$ node index.js
-📝 TODO 管理ツール
-
-使い方:
-  node index.js add "TODOの内容"  - TODO を追加
-  node index.js list              - TODO 一覧を表示
-  node index.js delete <ID>       - TODO を削除
-  node index.js stats             - 統計情報を表示
-```
-
----
-
-## 6. データファイル
-
-### 6.1 todos.json
+### 7.1 todos.json
 
 TODO データは `todos.json` に JSON 形式で保存されます。
 
-**ファイルの場所**: `index.js` と同じディレクトリ
+**ファイルの場所**: プロジェクトルート
 
 **データ構造**:
+
 ```json
 [
   {
     "id": 1,
     "text": "買い物に行く",
     "createdAt": "2026-02-16T08:30:00.000Z"
-  },
-  {
-    "id": 2,
-    "text": "レポートを書く",
-    "createdAt": "2026-02-16T08:31:00.000Z"
   }
 ]
 ```
 
-**各フィールドの説明**:
-
-| フィールド | 型 | 説明 |
-|-----------|-----|------|
-| `id` | number | TODO の識別番号（自動採番） |
-| `text` | string | TODO の内容 |
-| `createdAt` | string | 作成日時（ISO 8601 形式） |
-
 **注意事項**:
-- `todos.json` は初回の `add` 実行時に自動生成されます
-- 手動で編集することも可能ですが、JSON 形式を壊さないよう注意してください
+- 初回の TODO 追加時に自動生成されます
 - `.gitignore` で Git 管理対象外にしています
 
 ---
 
-## 7. ファイル構成
+## 8. ファイル構成
 
 ```
 cc-mcp-test01/
-├── .gitignore       # Git 除外設定
-├── MANUAL.md        # ユーザーマニュアル（このファイル）
-├── PLAN.md          # 開発計画書
-├── README.md        # プロジェクト概要
-├── package.json     # Node.js プロジェクト設定
-├── index.js         # メインアプリケーション
-├── utils.js         # ユーティリティ関数
-└── todos.json       # TODOデータ（自動生成・Git管理外）
+├── src/
+│   ├── server.ts       # REST API サーバー（Express + Swagger）
+│   ├── index.ts        # CLI エントリポイント
+│   ├── service.ts      # ビジネスロジック（TodoService）
+│   ├── repository.ts   # データアクセス層（TodoRepository）
+│   ├── utils.ts        # ユーティリティ関数
+│   └── types.ts        # 型定義
+├── tests/
+│   ├── service.test.ts # TodoService のテスト（10 件）
+│   └── utils.test.ts   # formatDate のテスト（3 件）
+├── package.json
+├── tsconfig.json
+├── vitest.config.ts
+└── todos.json          # データファイル（自動生成・Git 管理外）
 ```
 
-### 7.1 各ファイルの役割
+### 8.1 各ファイルの役割
 
-| # | ファイル | 役割 |
-|---|---------|------|
-| 1 | `index.js` | メインアプリケーション。コマンド解析と TODO 操作を担当 |
-| 2 | `utils.js` | ユーティリティ関数。日付フォーマットと統計処理を担当 |
-| 3 | `package.json` | Node.js プロジェクトの設定（名前・バージョン等） |
-| 4 | `todos.json` | TODO データの永続化ファイル（自動生成） |
+| # | ファイル | レイヤー | 役割 |
+|---|---------|---------|------|
+| 1 | `src/server.ts` | エントリポイント | REST API サーバー。Express ルーティング・Swagger 定義・CORS |
+| 2 | `src/index.ts` | エントリポイント | CLI。コマンドライン引数の解析と振り分け |
+| 3 | `src/service.ts` | ビジネスロジック | TodoService クラス。純粋関数による TODO 操作 |
+| 4 | `src/repository.ts` | データアクセス | TodoRepository クラス。todos.json の読み書き |
+| 5 | `src/utils.ts` | ユーティリティ | formatDate 関数。日付フォーマット変換 |
+| 6 | `src/types.ts` | 型定義 | Todo, TodoStats インターフェース |
 
 ---
 
-## 8. 内部関数リファレンス
+## 9. サービス層リファレンス
 
-### 8.1 index.js の関数
+### 9.1 TodoService（src/service.ts）
 
-| # | 関数名 | 引数 | 戻り値 | 説明 |
-|---|--------|------|--------|------|
-| 1 | `loadTodos()` | なし | `Array` | `todos.json` から TODO 配列を読み込む。ファイルが存在しない場合は空配列を返す |
-| 2 | `saveTodos(todos)` | `todos`: Array | なし | TODO 配列を `todos.json` に JSON 形式で保存する |
-| 3 | `addTodo(text)` | `text`: string | なし | 新しい TODO を作成して保存する |
-| 4 | `listTodos()` | なし | なし | 全 TODO を一覧表示する |
-| 5 | `deleteTodo(id)` | `id`: string | なし | 指定 ID の TODO を削除する |
+ビジネスロジックを担当するクラスです。**純粋関数**として実装されており、副作用（ファイル I/O）を持ちません。
 
-### 8.2 utils.js の関数
+| # | メソッド | 引数 | 戻り値 | 説明 |
+|---|---------|------|--------|------|
+| 1 | `add(todos, text)` | `todos: Todo[]`, `text: string` | `{ todos: Todo[], added: Todo }` | 新しい TODO を作成し、追加後の配列と追加された TODO を返す |
+| 2 | `delete(todos, id)` | `todos: Todo[]`, `id: number` | `{ todos: Todo[], removed: Todo }` or `{ error: string }` | 指定 ID の TODO を削除。見つからない場合はエラーを返す |
+| 3 | `getStats(todos)` | `todos: Todo[]` | `TodoStats` | TODO の件数と最新の TODO を返す |
 
-| # | 関数名 | 引数 | 戻り値 | 説明 |
-|---|--------|------|--------|------|
-| 1 | `formatDate(isoString)` | `isoString`: string（ISO 8601） | `string`（`YYYY/MM/DD HH:mm`） | ISO 日付を読みやすい形式に変換する |
-| 2 | `getStats(todos)` | `todos`: Array | `{ count, latest }` | TODO の件数と最新の TODO を返す |
+#### add の動作詳細
 
-#### formatDate の入出力例
+- ID は `Math.max(...既存ID) + 1` で採番（削除後も ID が衝突しない）
+- 元の配列は変更せず、新しい配列を返す（イミュータブル）
+
+```typescript
+const result = service.add([{ id: 1, text: "既存", createdAt: "..." }], "新規");
+// result.todos → [{ id: 1, ... }, { id: 2, text: "新規", ... }]
+// result.added → { id: 2, text: "新規", createdAt: "..." }
+```
+
+#### delete の動作詳細
+
+- 成功時: 削除後の配列と削除された TODO を返す
+- 失敗時: `{ error: string }` を返す（例外ではなく戻り値でエラーを表現）
+
+```typescript
+const result = service.delete(todos, 1);
+if ("error" in result) {
+  // ID が見つからなかった場合
+} else {
+  // result.todos → 削除後の配列
+  // result.removed → 削除された TODO
+}
+```
+
+#### getStats の動作詳細
+
+- `createdAt` の降順ソートで最新の TODO を特定
+- 0 件の場合は `{ count: 0, latest: null }` を返す
+
+```typescript
+const stats = service.getStats(todos);
+// stats.count → 2
+// stats.latest → { id: 2, text: "最新のTODO", ... }
+```
+
+### 9.2 TodoRepository（src/repository.ts）
+
+データの永続化を担当するクラスです。
+
+| # | メソッド | 引数 | 戻り値 | 説明 |
+|---|---------|------|--------|------|
+| 1 | `constructor(dataFile?)` | `dataFile?: string` | — | データファイルのパスを指定。省略時は `todos.json` |
+| 2 | `loadAll()` | なし | `Todo[]` | 全 TODO を読み込む。ファイルがなければ空配列 |
+| 3 | `saveAll(todos)` | `todos: Todo[]` | `void` | 全 TODO を JSON 形式で保存 |
+
+### 9.3 formatDate（src/utils.ts）
+
+| # | 関数 | 引数 | 戻り値 | 説明 |
+|---|------|------|--------|------|
+| 1 | `formatDate(isoString)` | `isoString: string` | `string` | ISO 8601 日付を `YYYY/MM/DD HH:mm` 形式に変換 |
 
 ```
 入力: "2026-02-16T08:30:00.000Z"
-出力: "2026/02/16 17:30"（日本時間に変換）
+出力: "2026/02/16 17:30"（ローカルタイムゾーンに変換）
 ```
 
-#### getStats の入出力例
+---
 
-```javascript
-// TODO が存在する場合
-入力: [{ id: 1, text: "買い物", createdAt: "2026-02-16T08:30:00.000Z" }]
-出力: { count: 1, latest: { id: 1, text: "買い物", createdAt: "..." } }
+## 10. テスト
 
-// TODO が 0 件の場合
-入力: []
-出力: { count: 0, latest: null }
+### 10.1 テストの実行
+
+```bash
+npm test
 ```
+
+### 10.2 テスト一覧
+
+| # | ファイル | テスト数 | 対象 |
+|---|---------|---------|------|
+| 1 | `tests/service.test.ts` | 10 | TodoService の add / delete / getStats |
+| 2 | `tests/utils.test.ts` | 3 | formatDate |
